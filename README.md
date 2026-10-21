@@ -13,11 +13,20 @@ python3 -m http.server 8000
 
 GitHub Pages works too. Opened as a plain file, only the Wasteland stage is available.
 
-## Model viewer
+## Model viewer and roster editor
 
-`viewer.html` (or the MODEL VIEWER button on the select screen) shows every character model in `models/`, grouped by character with a button per form or outfit. Drag to orbit, scroll to zoom, and use the arrow keys to step through every form. The address bar keeps the current model, so you can link straight to one.
+`viewer.html` works as a single file: open it straight from disk and it pulls the models from this GitHub repo (it needs an internet connection). When served with the repo, it reads `models/` instead.
 
-To add a model, put the `.glb` in `models/` and add it to `ROSTER` at the top of the script in `viewer.html`, either as a new form of an existing character or as a new character. Models are scaled to the same height automatically.
+The left panel is the roster. Each box is one character select icon. Each row inside it is a skin, and the chips are that skin's forms in order, with the first one as the base form. The star marks the default skin, and its base form is the icon's portrait. Drag chips to:
+
+- reorder or move forms between skins,
+- make a new skin (the "new skin" zone, or drop the chip on a character icon at the bottom),
+- give a model its own icon (the "new character" zone),
+- take it off the roster (Unassigned).
+
+Double-click a name to rename it. The roster is saved in the browser. EXPORT downloads it as `kiclash-roster.json` and COPY JSON copies it, so it can go into the game.
+
+To add a model, put the `.glb` in `models/` and add a line to `MODELS` at the top of the script in `viewer.html`.
 
 ## Stages
 

@@ -5,41 +5,78 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KI CLASH Model Viewer</title>
 <style>
-:root{--panel:rgba(14,10,26,.84);--line:rgba(255,255,255,.16);--txt:#f7f2e4;--dim:#b2a9c4;--gold:#ffc234;--red:#ff4757;--ki:#6fe0ff;
+:root{--panel:rgba(14,10,26,.88);--line:rgba(255,255,255,.16);--txt:#f7f2e4;--dim:#b2a9c4;--gold:#ffc234;--red:#ff4757;--ki:#6fe0ff;
 --disp:Impact,"Haettenschweiler","Arial Narrow Bold","Franklin Gothic Bold",sans-serif;--body:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#07060d;color:var(--txt);font-family:var(--body)}
 #view{position:fixed;inset:0}
 #view canvas{display:block;width:100%;height:100%;outline:none}
 .hidden{display:none!important}
-kbd{display:inline-block;min-width:20px;padding:1px 5px;border:1px solid rgba(255,255,255,.4);border-bottom-width:3px;border-radius:5px;font:700 11px/1.2 var(--body);text-align:center;background:rgba(255,255,255,.08);color:#fff}
+button{font-family:var(--body)}
 
-#side{position:fixed;left:14px;top:14px;bottom:14px;width:270px;display:flex;flex-direction:column;gap:10px;z-index:2}
-.logo{font-family:var(--disp);font-size:40px;letter-spacing:3px;line-height:.9;font-style:italic;transform:skewX(-8deg);
+/* ---------- roster editor (left) ---------- */
+#side{position:fixed;left:14px;top:14px;bottom:14px;width:350px;display:flex;flex-direction:column;gap:8px;z-index:2}
+.logo{font-family:var(--disp);font-size:36px;letter-spacing:3px;line-height:.9;font-style:italic;transform:skewX(-8deg);
 background:linear-gradient(180deg,#fff7d1 0%,#ffc234 45%,#ff6a1a 75%,#c2260e 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
 filter:drop-shadow(0 3px 0 #3a0d00)}
-.logo small{display:block;font-size:17px;letter-spacing:5px}
-#back{font:700 12px var(--body);color:var(--dim);text-decoration:none}
-#back:hover{color:#fff}
-#roster{flex:1;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:4px 16px 4px 16px;padding:8px}
-.char{padding:8px 8px 10px;border-radius:8px}
-.char + .char{border-top:1px solid var(--line)}
-.char h3{font-family:var(--disp);font-weight:400;font-size:22px;letter-spacing:2px;font-style:italic;color:#fff;line-height:1.1}
-.char.on h3{color:var(--gold)}
-.forms{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.forms button,.tool{font:700 11px var(--body);letter-spacing:1px;padding:6px 9px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#ddd;cursor:pointer}
-.forms button:hover,.tool:hover{border-color:rgba(255,255,255,.45)}
-.forms button.on,.tool.on{background:#fff;color:#111;border-color:#fff}
-.forms button:focus-visible,.tool:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.logo small{font-size:16px;letter-spacing:5px;margin-left:8px}
+.files{display:flex;gap:6px}
+#editor{flex:1;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:4px 16px 4px 16px;padding:10px}
+.help{font-size:11.5px;line-height:1.5;color:var(--dim);margin-bottom:10px}
+.help b{color:#fff}
+.slot{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;background:rgba(255,255,255,.03)}
+.slot.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.shead{display:flex;align-items:center;gap:8px}
+.icon{width:38px;height:44px;border-radius:4px 10px 4px 10px;border:1px solid var(--line);background:#1a1430 center/cover no-repeat;flex:none;
+display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:18px;color:var(--dim)}
+.name{flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:5px;color:#fff;padding:3px 5px;font-family:var(--disp);font-size:20px;letter-spacing:2px;font-style:italic}
+.name:hover{border-color:var(--line)}.name:focus{outline:none;border-color:var(--gold);background:rgba(0,0,0,.3)}
+.skin{margin:6px 0 0 6px;padding:6px 6px 6px 8px;border-left:2px solid var(--line);border-radius:0 8px 8px 0}
+.skin.def{border-left-color:var(--gold)}
+.khead{display:flex;align-items:center;gap:4px}
+.kname{font-family:var(--body);font-size:12px;font-style:normal;font-weight:700;letter-spacing:1px}
+.star{width:24px;height:24px;border-radius:5px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;font-size:14px;line-height:1;flex:none}
+.star.on{color:#221;background:var(--gold);border-color:var(--gold)}
+.x{width:22px;height:22px;border-radius:5px;border:1px solid transparent;background:none;color:var(--dim);cursor:pointer;font-size:15px;line-height:1;flex:none}
+.x:hover{color:var(--red);border-color:var(--line)}
+.forms{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;min-height:30px;padding:3px;border-radius:7px;border:1px dashed transparent}
+.chip{font:700 11px var(--body);letter-spacing:.5px;padding:6px 9px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:#ddd;cursor:grab;user-select:none;display:flex;gap:6px;align-items:center}
+.chip:hover{border-color:rgba(255,255,255,.45)}
+.chip.on{background:#fff;color:#111;border-color:#fff}
+.chip .n{font-size:9px;opacity:.6}
+.chip.dragging{opacity:.35}
+.drop{margin-top:6px;padding:7px;border:1px dashed var(--line);border-radius:7px;font-size:11px;color:var(--dim);text-align:center}
+.over{border-color:var(--gold)!important;background:rgba(255,194,52,.12)!important;color:#fff}
+.tray{margin-top:4px}
+.tray h4{font-family:var(--disp);font-weight:400;letter-spacing:2px;font-size:16px;color:var(--dim);margin:12px 0 2px}
+.tray .forms{border-color:var(--line);min-height:38px}
 
-#bar{position:fixed;right:14px;top:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;z-index:2;max-width:calc(100% - 320px)}
-#info{position:fixed;left:298px;right:14px;bottom:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;z-index:2;pointer-events:none}
-#title{font-family:var(--disp);font-size:clamp(34px,5vw,64px);letter-spacing:3px;font-style:italic;transform:skewX(-8deg);line-height:.95;text-shadow:0 4px 0 rgba(0,0,0,.6)}
-#title span{display:block;font-size:.42em;letter-spacing:4px;color:var(--gold)}
-#meta{font-size:12px;color:var(--dim);text-align:right;line-height:1.6;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
-#meta b{color:#fff;font-weight:700}
-#status{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--disp);font-size:26px;letter-spacing:3px;color:#fff;text-shadow:0 2px 0 #000;z-index:2;text-align:center;pointer-events:none;padding:0 16px}
+.tool{font:700 11px var(--body);letter-spacing:1px;padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:rgba(14,10,26,.8);color:#ddd;cursor:pointer}
+.tool:hover{border-color:rgba(255,255,255,.45)}
+.tool.on{background:#fff;color:#111;border-color:#fff}
+.tool:focus-visible,.chip:focus-visible,.star:focus-visible,.tile:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ---------- viewer chrome ---------- */
+#bar{position:fixed;right:14px;top:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;z-index:2;max-width:calc(100% - 400px)}
+#title{position:fixed;left:384px;top:14px;z-index:2;font-family:var(--disp);font-size:46px;letter-spacing:3px;font-style:italic;transform:skewX(-8deg);line-height:.95;text-shadow:0 4px 0 rgba(0,0,0,.6);pointer-events:none}
+#title span{display:block;font-size:.4em;letter-spacing:3px;color:var(--gold)}
+#meta{position:fixed;right:14px;top:56px;font-size:11.5px;color:var(--dim);text-align:right;line-height:1.5;z-index:2;pointer-events:none}
+#meta b{color:#fff}
+#status{position:fixed;left:calc(50% + 182px);top:42%;transform:translate(-50%,-50%);font-family:var(--disp);font-size:26px;letter-spacing:3px;color:#fff;text-shadow:0 2px 0 #000;z-index:2;text-align:center;pointer-events:none}
 #status.err{font-family:var(--body);font-size:15px;letter-spacing:0;color:var(--red);max-width:520px;line-height:1.5}
+
+/* ---------- character select preview (bottom) ---------- */
+#pick{position:fixed;left:384px;right:14px;bottom:14px;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px}
+.prow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}
+.prow .lbl{font:700 11px var(--body);letter-spacing:2px;color:var(--dim);margin-right:4px}
+#tiles{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:4px 16px 4px 16px}
+.tile{width:74px;cursor:pointer;background:none;border:none;color:var(--txt);display:flex;flex-direction:column;align-items:center;gap:3px}
+.tile .icon{width:74px;height:86px;font-size:30px;border-width:2px;transition:transform .1s}
+.tile:hover .icon{transform:translateY(-2px);border-color:rgba(255,255,255,.45)}
+.tile.over .icon{border-color:var(--gold);background-color:rgba(255,194,52,.25)}
+.tile.on .icon{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 18px rgba(255,194,52,.35)}
+.tile span{font-family:var(--disp);font-size:13px;letter-spacing:1px;font-style:italic;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pickHint{font-size:11px;color:var(--dim)}
 
 @media (max-width:760px){
   #side{left:16px;right:16px;top:12px;bottom:auto;width:auto}
@@ -59,11 +96,18 @@ filter:drop-shadow(0 3px 0 #3a0d00)}
 <div id="view"></div>
 
 <div id="side">
-  <div class="logo">KI CLASH<small>MODEL VIEWER</small></div>
-  <a id="back" href="index.html">&larr; Back to the game</a>
-  <div id="roster"></div>
+  <div class="logo">KI CLASH<small>ROSTER</small></div>
+  <div class="files">
+    <button class="tool" id="bExport" title="Download the roster as kiclash-roster.json">EXPORT</button>
+    <button class="tool" id="bCopy" title="Copy the roster JSON to the clipboard">COPY JSON</button>
+    <button class="tool" id="bImport" title="Load a roster JSON file">IMPORT</button>
+    <button class="tool" id="bReset" title="Go back to the built-in roster">RESET</button>
+    <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+  </div>
+  <div id="editor"></div>
 </div>
 
+<div id="title"></div>
 <div id="bar">
   <button class="tool on" id="tSpin" aria-pressed="true">TURNTABLE</button>
   <button class="tool" id="tLight" aria-pressed="false">STUDIO LIGHT</button>
@@ -71,64 +115,138 @@ filter:drop-shadow(0 3px 0 #3a0d00)}
   <button class="tool" id="tAcc" aria-pressed="false">BANDANA</button>
   <button class="tool" id="tReset">RESET VIEW</button>
 </div>
-
-<div id="info">
-  <div id="title"></div>
-  <div id="meta"></div>
-</div>
+<div id="meta"></div>
 <div id="status"></div>
 
+<div id="pick">
+  <div class="prow" id="skinRow"></div>
+  <div class="prow" id="formRow"></div>
+  <div id="tiles"></div>
+  <div id="pickHint">Character select preview: one icon per character. Drag icons to reorder, or drop a form chip on an icon to add it as a new skin.</div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="lib/GLTFLoader.js"></script>
-<script src="lib/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 'use strict';
 /* =====================================================================
-   KI CLASH model viewer: browse every character model in models/
+   KI CLASH model viewer + roster editor
+   Roster shape: slots (one character select icon each) -> skins (one is the default) -> forms (first is the base form)
    ===================================================================== */
 
-// rot: [x, y, z] radians, applied before the model is fitted, for models exported lying down or facing away
-const ROSTER = [
-  { name: 'GOKU', forms: [
-    { name: 'BASE', file: 'dbfz_goku_base_updated.glb' },
-    { name: 'SAIYAN SAGA', file: 'dbfz_goku_saiyan_saga.glb' },
-    { name: 'PARTIAL SSJ', file: 'dbfz_goku_partial_ssj.glb' },
-    { name: 'SUPER SAIYAN', file: 'dbfz_goku_ssj_updated.glb' },
-    { name: 'SSJ3 (MANGA)', file: 'dbfz_goku_ssj3_buu_saga_manga_style.glb' },
-    { name: 'CC OUTFIT', file: 'dbsz_cc_goku_base.glb' },
-  ] },
-  { name: 'VEGETA', forms: [
-    { name: 'WHIS ARMOR', file: 'dbsz_-_vegeta_whis_armor_base.glb' },
-    { name: 'SUPER SAIYAN', file: 'dbsz_-_vegeta_whis_armor_ss.glb' },
-    { name: 'SSG', file: 'dbsz_-_vegeta_whis_armor_ssg.glb' },
-    { name: 'SSGSS', file: 'dbsz_-_vegeta_whis_armor_ssgss.glb' },
-    { name: 'SSB (FZ)', file: 'vegeta_ssb_dbfz.glb' },
-  ] },
-  { name: 'GOKU BLACK', forms: [
-    { name: 'BASE', file: 'dbsz_gohan_black_base.glb' },
-    { name: 'ROSÉ', file: 'dbsz_gohan_black_rose.glb' },
-  ] },
-  { name: 'GOHAN', forms: [
-    { name: 'BEAST', file: 'gohan_beast.glb' },
-  ] },
-  { name: 'BARDOCK', forms: [
-    { name: 'BASE', file: 'bardock_base_dbfz.glb', acc: 'bardocks_bandana_dbfz.glb' },
-    { name: 'SUPER SAIYAN', file: 'bardock_ssj_dbfz.glb', acc: 'bardocks_bandana_dbfz.glb' },
-  ] },
-  { name: 'VEGITO', forms: [
-    { name: 'SSB', file: 'vegito_dbfz.glb' },
-  ] },
-  { name: 'GOGETA', forms: [
-    { name: 'SSJ (HALO)', file: 'the_angel_born_in_hell.glb' },
-  ] },
-  { name: 'GREAT APE', forms: [
-    { name: 'OOZARU', file: 'great_ape_dbsz.glb', height: 6 },
-  ] },
+// Models are read from models/ next to this page when it is served with the repo,
+// otherwise straight from the GitHub repo, so this one file works on its own.
+const MODEL_SOURCES = [
+  'models/',
+  'https://raw.githubusercontent.com/Gall9had/ki-clash/main/models/',
+  'https://cdn.jsdelivr.net/gh/Gall9had/ki-clash@main/models/',
 ];
-const HEIGHT = 1.8; // every model is fitted to this height, unless its form says otherwise
+
+// every model in the repo; char/form are the names a model gets when it is first placed
+const MODELS = {
+  'dbfz_goku_base_updated.glb': { char: 'GOKU', form: 'BASE' },
+  'dbfz_goku_saiyan_saga.glb': { char: 'GOKU', form: 'SAIYAN SAGA' },
+  'dbfz_goku_partial_ssj.glb': { char: 'GOKU', form: 'PARTIAL SSJ' },
+  'dbfz_goku_ssj_updated.glb': { char: 'GOKU', form: 'SUPER SAIYAN' },
+  'dbfz_goku_ssj3_buu_saga_manga_style.glb': { char: 'GOKU', form: 'SSJ3' },
+  'dbsz_cc_goku_base.glb': { char: 'GOKU', form: 'CC OUTFIT' },
+  'dbsz_-_vegeta_whis_armor_base.glb': { char: 'VEGETA', form: 'BASE' },
+  'dbsz_-_vegeta_whis_armor_ss.glb': { char: 'VEGETA', form: 'SUPER SAIYAN' },
+  'dbsz_-_vegeta_whis_armor_ssg.glb': { char: 'VEGETA', form: 'SSG' },
+  'dbsz_-_vegeta_whis_armor_ssgss.glb': { char: 'VEGETA', form: 'SSGSS' },
+  'vegeta_ssb_dbfz.glb': { char: 'VEGETA', form: 'SSB' },
+  'dbsz_gohan_black_base.glb': { char: 'GOKU BLACK', form: 'BASE' },
+  'dbsz_gohan_black_rose.glb': { char: 'GOKU BLACK', form: 'ROSÉ' },
+  'gohan_beast.glb': { char: 'GOHAN', form: 'BEAST' },
+  'bardock_base_dbfz.glb': { char: 'BARDOCK', form: 'BASE', acc: 'bardocks_bandana_dbfz.glb' },
+  'bardock_ssj_dbfz.glb': { char: 'BARDOCK', form: 'SUPER SAIYAN', acc: 'bardocks_bandana_dbfz.glb' },
+  'vegito_dbfz.glb': { char: 'VEGITO', form: 'SSB' },
+  'the_angel_born_in_hell.glb': { char: 'GOGETA', form: 'SSJ' },
+  'great_ape_dbsz.glb': { char: 'GREAT APE', form: 'OOZARU', height: 6 },
+};
+
+const F = (file, name) => ({ name: name || MODELS[file].form, file });
+const DEFAULT_ROSTER = { version: 1, slots: [
+  { name: 'GOKU', defaultSkin: 0, skins: [
+    { name: 'DBFZ', forms: [F('dbfz_goku_base_updated.glb'), F('dbfz_goku_partial_ssj.glb'), F('dbfz_goku_ssj_updated.glb'), F('dbfz_goku_ssj3_buu_saga_manga_style.glb')] },
+    { name: 'SAIYAN SAGA', forms: [F('dbfz_goku_saiyan_saga.glb', 'BASE')] },
+    { name: 'CC OUTFIT', forms: [F('dbsz_cc_goku_base.glb', 'BASE')] },
+  ] },
+  { name: 'VEGETA', defaultSkin: 0, skins: [
+    { name: 'WHIS ARMOR', forms: [F('dbsz_-_vegeta_whis_armor_base.glb'), F('dbsz_-_vegeta_whis_armor_ss.glb'), F('dbsz_-_vegeta_whis_armor_ssg.glb'), F('dbsz_-_vegeta_whis_armor_ssgss.glb')] },
+    { name: 'DBFZ', forms: [F('vegeta_ssb_dbfz.glb')] },
+  ] },
+  { name: 'GOKU BLACK', defaultSkin: 0, skins: [{ name: 'DEFAULT', forms: [F('dbsz_gohan_black_base.glb'), F('dbsz_gohan_black_rose.glb')] }] },
+  { name: 'GOHAN', defaultSkin: 0, skins: [{ name: 'BEAST', forms: [F('gohan_beast.glb')] }] },
+  { name: 'BARDOCK', defaultSkin: 0, skins: [{ name: 'DEFAULT', forms: [F('bardock_base_dbfz.glb'), F('bardock_ssj_dbfz.glb')] }] },
+  { name: 'VEGITO', defaultSkin: 0, skins: [{ name: 'DEFAULT', forms: [F('vegito_dbfz.glb')] }] },
+  { name: 'GOGETA', defaultSkin: 0, skins: [{ name: 'HALO', forms: [F('the_angel_born_in_hell.glb')] }] },
+  { name: 'GREAT APE', defaultSkin: 0, skins: [{ name: 'DEFAULT', forms: [F('great_ape_dbsz.glb')] }] },
+] };
+const STORE_KEY = 'kiclash.roster.v1';
+const HEIGHT = 1.8; // every model is fitted to this height, unless MODELS says otherwise
 
 const $ = id => document.getElementById(id);
 const V3 = THREE.Vector3;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+
+// ---------------- roster data ----------------
+let roster = loadSaved() || clone(DEFAULT_ROSTER);
+function loadSaved() {
+  try { const r = JSON.parse(localStorage.getItem(STORE_KEY)); return validRoster(r) ? r : null; } catch (e) { return null; }
+}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(roster)); } catch (e) { /* storage blocked: keep working in memory */ } }
+function validRoster(r) {
+  return r && Array.isArray(r.slots) && r.slots.every(s => s && typeof s.name === 'string' && Array.isArray(s.skins)
+    && s.skins.every(k => k && typeof k.name === 'string' && Array.isArray(k.forms) && k.forms.every(f => f && typeof f.file === 'string')));
+}
+function findFile(file) {
+  for (const slot of roster.slots) for (const skin of slot.skins) {
+    const i = skin.forms.findIndex(f => f.file === file);
+    if (i >= 0) return { slot, skin, form: skin.forms[i], i };
+  }
+  return null;
+}
+const usedFiles = () => new Set(roster.slots.flatMap(s => s.skins.flatMap(k => k.forms.map(f => f.file))));
+const unassigned = () => { const u = usedFiles(); return Object.keys(MODELS).filter(f => !u.has(f)); };
+const defaultSkin = slot => slot.skins[slot.defaultSkin] || slot.skins[0];
+const iconFile = slot => { const k = defaultSkin(slot); return k && k.forms[0] && k.forms[0].file; };
+
+// Move a model to a new place in the roster. dest: { type: 'form', skin, before } | { type: 'skin', slot } | { type: 'slot' } | { type: 'none' }
+function moveFile(file, dest) {
+  const defaults = new Map(roster.slots.map(s => [s, defaultSkin(s)]));
+  const src = findFile(file);
+  const form = src ? src.form : F(file);
+  if (src) src.skin.forms.splice(src.i, 1);
+  if (dest.type === 'form') {
+    const at = dest.before ? dest.skin.forms.findIndex(f => f.file === dest.before) : -1;
+    dest.skin.forms.splice(at < 0 ? dest.skin.forms.length : at, 0, form);
+  } else if (dest.type === 'skin') {
+    dest.slot.skins.push({ name: src ? form.name : MODELS[file].form, forms: [form] });
+  } else if (dest.type === 'slot') {
+    const s = { name: MODELS[file] ? MODELS[file].char : 'NEW', defaultSkin: 0, skins: [{ name: 'DEFAULT', forms: [form] }] };
+    roster.slots.push(s); defaults.set(s, s.skins[0]);
+  }
+  tidy(defaults);
+}
+// drop empty skins and characters, keeping each character's default skin when it still exists
+function tidy(defaults) {
+  for (const slot of roster.slots) slot.skins = slot.skins.filter(k => k.forms.length);
+  roster.slots = roster.slots.filter(s => s.skins.length);
+  for (const slot of roster.slots) {
+    const d = slot.skins.indexOf(defaults.get(slot));
+    slot.defaultSkin = d >= 0 ? d : 0;
+  }
+  changed();
+}
+function changed() { dragFile = null; dragSlot = null; save(); renderEditor(); renderPick(); queueIcons(); }
+function endDrag() {
+  dragFile = null; dragSlot = null;
+  document.querySelectorAll('.dragging,.over').forEach(n => n.classList.remove('dragging', 'over'));
+  if (redrawLater) { redrawLater = false; renderEditor(); renderPick(); }
+}
 
 // ---------------- renderer / scene ----------------
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -137,17 +255,15 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 $('view').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 500);
-// centre the model in the space the panels leave free, which on phones is below the roster and above the buttons
+// centre the model in the space the panels leave free
 function resize() {
   renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight;
-  const top = innerWidth <= 760 ? $('side').getBoundingClientRect().bottom : 0;
-  const bottom = innerWidth <= 760 ? $('bar').getBoundingClientRect().top : innerHeight;
-  const left = innerWidth > 760 ? $('side').getBoundingClientRect().right : 0;
-  const dx = left / 2, dy = (top + bottom) / 2 - innerHeight / 2;
+  const left = $('side').getBoundingClientRect().right, bottom = $('pick').getBoundingClientRect().top;
+  const dx = left / 2, dy = (Math.max(60, bottom) - innerHeight) / 2;
   if (dx || dy) camera.setViewOffset(innerWidth, innerHeight, -dx, -dy, innerWidth, innerHeight); else camera.clearViewOffset();
   camera.updateProjectionMatrix();
 }
-addEventListener('resize', resize); resize();
+addEventListener('resize', resize);
 
 const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.ShaderMaterial({
   side: THREE.BackSide, depthWrite: false,
@@ -181,7 +297,6 @@ scene.add(flatLights);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.08;
-controls.minDistance = 0.4; controls.maxDistance = 60;
 controls.autoRotate = true; controls.autoRotateSpeed = 1.6;
 controls.addEventListener('start', () => { controls.autoRotate = false; setTool('tSpin', false); });
 
@@ -194,9 +309,22 @@ function fixMaterials(root) {
     if (n.isMesh) (Array.isArray(n.material) ? n.material : [n.material]).forEach(m => { if (m.metalness > 0 && !m.metalnessMap) m.metalness = 0; });
   });
 }
+// browsers block reading files next to a page opened from disk, so go straight to GitHub then
+let sourceIdx = location.protocol === 'file:' ? 1 : 0; // first source that worked, tried first next time
+function loadFrom(i, file) {
+  return new Promise((res, rej) => loader.load(MODEL_SOURCES[i] + encodeURIComponent(file), res, undefined, rej));
+}
+async function loadAny(file) {
+  const order = [sourceIdx, ...MODEL_SOURCES.map((_, i) => i).filter(i => i !== sourceIdx && !(i === 0 && location.protocol === 'file:'))];
+  let lastErr;
+  for (const i of order) {
+    try { const g = await loadFrom(i, file); sourceIdx = i; return g; } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
 function loadModel(file) {
   if (!cache[file]) {
-    cache[file] = new Promise((res, rej) => loader.load('models/' + file, g => { fixMaterials(g.scene); res(g); }, undefined, rej));
+    cache[file] = loadAny(file).then(g => { fixMaterials(g.scene); return g; });
     cache[file].catch(() => { delete cache[file]; });
   }
   return cache[file];
@@ -219,20 +347,18 @@ function skinnedBounds(root) {
   });
   return box;
 }
-
-// stand the model on the floor, centred, at the target height
-function fit(obj, form) {
-  obj.rotation.set(...(form.rot || [0, 0, 0]));
+// stand the model on the floor, centred, at its target height
+function fit(obj, file) {
+  if (obj.userData.fitted) return obj.userData.fitted;
   obj.scale.setScalar(1); obj.position.set(0, 0, 0);
   const box = skinnedBounds(obj), size = box.getSize(new V3());
-  const s = (form.height || HEIGHT) / (size.y || 1);
+  const s = ((MODELS[file] && MODELS[file].height) || HEIGHT) / (size.y || 1);
   obj.scale.setScalar(s);
   const c = box.getCenter(new V3());
   obj.position.set(-c.x * s, -box.min.y * s, -c.z * s);
   obj.updateMatrixWorld(true);
-  return { size: size.multiplyScalar(s) };
+  return (obj.userData.fitted = size.multiplyScalar(s));
 }
-
 function stats(root) {
   let tris = 0, meshes = 0, bones = 0; const mats = new Set();
   root.traverse(n => {
@@ -244,15 +370,68 @@ function stats(root) {
   return { tris: Math.round(tris), meshes, bones, mats: mats.size };
 }
 
-// ---------------- state ----------------
-const view = { c: 0, f: 0, model: null, acc: null, showAcc: false, studio: false, wire: false, token: 0, fitted: null };
+// ---------------- icons ----------------
+// Portraits for the character select tiles: render the head and shoulders into a corner of the
+// main canvas and copy it out before the frame is presented.
+const icons = {};
+const PW = 74, PH = 86;
+const portraitCam = new THREE.PerspectiveCamera(28, PW / PH, 0.01, 500);
+function capturePortrait(obj, file) {
+  const h = fit(obj, file).y, dpr = renderer.getPixelRatio();
+  const others = [floor, ring, view.model, view.acc].filter(o => o && o !== obj);
+  const was = others.map(o => o.visible); others.forEach(o => { o.visible = false; });
+  const added = !obj.parent; if (added) scene.add(obj);
+  const big = MODELS[file] && MODELS[file].height; // the ape is wide: frame more of it
+  const d = h * (big ? 0.3 : 0.15) / Math.tan(THREE.MathUtils.degToRad(portraitCam.fov / 2));
+  // aim at the head bone when the rig has one, since big hair throws off a guess from the height
+  let head = null;
+  obj.traverse(n => { if (!head && n.isBone && /^(g_|gd_)?head(_def)?(_\d+)*$/i.test(n.name)) head = n; });
+  const look = head ? head.getWorldPosition(new V3()) : null;
+  const y = look && look.y > h * 0.6 && look.y < h ? look.y + h * 0.02 : h * (big ? 0.72 : 0.87);
+  portraitCam.position.set(h * 0.03, y + h * 0.03, d); portraitCam.lookAt(0, y, 0);
+  sky.position.copy(portraitCam.position);
+  renderer.setScissorTest(true); renderer.setScissor(0, 0, PW, PH); renderer.setViewport(0, 0, PW, PH);
+  renderer.render(scene, portraitCam);
+  const c = document.createElement('canvas'); c.width = Math.round(PW * dpr); c.height = Math.round(PH * dpr);
+  const src = renderer.domElement;
+  c.getContext('2d').drawImage(src, 0, src.height - c.height, c.width, c.height, 0, 0, c.width, c.height);
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, innerWidth, innerHeight);
+  if (added) scene.remove(obj);
+  others.forEach((o, i) => { o.visible = was[i]; });
+  sky.position.copy(camera.position); renderer.render(scene, camera);
+  return c.toDataURL('image/jpeg', 0.88);
+}
+let iconBusy = false;
+async function queueIcons() {
+  if (iconBusy) return; iconBusy = true;
+  try {
+    for (;;) {
+      const file = roster.slots.map(iconFile).find(f => f && !icons[f] && !icons[f + ':failed']);
+      if (!file) break;
+      try { const g = await loadModel(file); icons[file] = capturePortrait(g.scene, file); }
+      catch (e) { icons[file + ':failed'] = true; }
+      updateIcons();
+    }
+  } finally { iconBusy = false; }
+}
+function iconHTML(slot) {
+  const f = iconFile(slot), url = f && icons[f];
+  return `<div class="icon" data-icon="${esc(f || '')}"${url ? ` style="background-image:url(${url})"` : ''}>${url ? '' : esc(slot.name.charAt(0))}</div>`;
+}
+// fill in portraits without rebuilding the lists, so a drag in progress isn't interrupted
+function updateIcons() {
+  document.querySelectorAll('.icon[data-icon]').forEach(el => {
+    const url = icons[el.dataset.icon];
+    if (url && !el.style.backgroundImage) { el.style.backgroundImage = `url(${url})`; el.textContent = ''; }
+  });
+}
 
+// ---------------- view state ----------------
+const view = { file: null, model: null, acc: null, showAcc: false, studio: false, wire: false, token: 0, fitted: null };
 function setTool(id, on) { const b = $(id); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }
-
 function applyWire(root) {
   root.traverse(n => { if (n.isMesh) (Array.isArray(n.material) ? n.material : [n.material]).forEach(m => { m.wireframe = view.wire; }); });
 }
-
 function frameCamera(height) {
   const h = height || HEIGHT;
   controls.target.set(0, h * 0.52, 0);
@@ -263,77 +442,229 @@ function frameCamera(height) {
   controls.minDistance = h * 0.25; controls.maxDistance = h * 30;
   controls.update();
 }
+function titleFor(file) {
+  const at = findFile(file);
+  if (at) return { top: at.slot.name, sub: `${at.skin.name} · ${at.form.name}` };
+  const m = MODELS[file] || { char: file, form: '' };
+  return { top: m.char, sub: `${m.form} · NOT ON THE ROSTER` };
+}
+function refreshTitle() {
+  if (!view.file) return;
+  const t = titleFor(view.file);
+  $('title').innerHTML = `${esc(t.top)}<span>${esc(t.sub)}</span>`;
+}
 
-async function show(c, f, keepCamera) {
-  view.c = c; view.f = f;
-  const form = ROSTER[c].forms[f], token = ++view.token;
-  refreshRoster();
-  $('title').innerHTML = `${ROSTER[c].name}<span>${form.name}</span>`;
+async function show(file, keepCamera) {
+  const token = ++view.token, prevHeight = view.fitted && view.fitted.y;
+  view.file = file;
+  refreshTitle(); renderEditor(); renderPick();
   $('status').className = ''; $('status').textContent = 'LOADING…';
-  $('tAcc').classList.toggle('hidden', !form.acc);
-  try { history.replaceState(null, '', '#' + encodeURIComponent(form.file.replace(/\.glb$/, ''))); } catch (e) { /* ignore */ }
+  const accFile = MODELS[file] && MODELS[file].acc;
+  $('tAcc').classList.toggle('hidden', !accFile);
   let gltf, accGltf = null;
   try {
-    gltf = await loadModel(form.file);
-    if (form.acc) accGltf = await loadModel(form.acc).catch(() => null);
+    gltf = await loadModel(file);
+    if (accFile) accGltf = await loadModel(accFile).catch(() => null);
   } catch (err) {
     if (token !== view.token) return;
     console.error(err);
     $('status').className = 'err';
-    $('status').textContent = location.protocol === 'file:'
-      ? 'Browsers block loading models from a file opened straight from disk. Serve the folder over http (see the README) and reload.'
-      : `Couldn't load ${form.file}.`;
+    $('status').textContent = `Couldn't load ${file}. Check your internet connection: models come from the ki-clash GitHub repo.`;
     return;
   }
   if (token !== view.token) return;
   if (view.model) scene.remove(view.model);
   if (view.acc) scene.remove(view.acc);
   view.model = gltf.scene; scene.add(view.model);
-  const { size } = fit(view.model, form);
-  view.fitted = size;
+  view.fitted = fit(view.model, file);
   // the bandana shares Bardock's rig, so give it the same transform as the body it sits on
   view.acc = null;
   if (accGltf) {
     view.acc = accGltf.scene;
-    view.acc.rotation.copy(view.model.rotation); view.acc.scale.copy(view.model.scale); view.acc.position.copy(view.model.position);
+    view.acc.scale.copy(view.model.scale); view.acc.position.copy(view.model.position);
     view.acc.visible = view.showAcc; scene.add(view.acc); applyWire(view.acc);
   }
   applyWire(view.model);
-  if (!keepCamera) frameCamera(size.y);
+  if (!keepCamera || Math.abs((prevHeight || 0) - view.fitted.y) > 0.01) frameCamera(view.fitted.y);
   const st = stats(view.model);
-  $('meta').innerHTML = `<b>${form.file}</b><br>${st.tris.toLocaleString()} triangles · ${st.meshes} meshes · ${st.mats} materials · ${st.bones} bones`;
+  $('meta').innerHTML = `<b>${esc(file)}</b><br>${st.tris.toLocaleString()} triangles · ${st.meshes} meshes · ${st.mats} materials · ${st.bones} bones`;
   $('status').textContent = '';
-  // warm the cache for the next form so stepping through feels instant
-  const nx = next(1); loadModel(ROSTER[nx[0]].forms[nx[1]].file).catch(() => {});
+  if (!icons[file]) { icons[file] = capturePortrait(view.model, file); updateIcons(); }
 }
 
-function next(dir) {
-  let c = view.c, f = view.f + dir;
-  if (f >= ROSTER[c].forms.length) { c = (c + 1) % ROSTER.length; f = 0; }
-  if (f < 0) { c = (c - 1 + ROSTER.length) % ROSTER.length; f = ROSTER[c].forms.length - 1; }
-  return [c, f];
+// ---------------- roster editor ----------------
+const DRAG = 'application/x-kiclash-file', DRAG_SLOT = 'application/x-kiclash-slot';
+let dragFile = null, dragSlot = null;
+
+function chipHTML(f, i) {
+  return `<div class="chip${f.file === view.file ? ' on' : ''}" draggable="true" tabindex="0" data-file="${esc(f.file)}" title="${esc(f.file)}${i === 0 ? ' (base form)' : ''}\nClick to view, double-click to rename, drag to move">${i >= 0 ? `<span class="n">${i + 1}</span>` : ''}${esc(f.name)}</div>`;
+}
+let redrawLater = false;
+function renderEditor() {
+  if (dragFile || dragSlot !== null) { redrawLater = true; return; }
+  const el = $('editor'), scroll = el.scrollTop;
+  el.innerHTML = `<div class="help">Each box is one <b>character select icon</b>. Inside it, each row is a <b>skin</b> and its chips are that skin's <b>forms</b> in order (1 is the base form). <b>★</b> marks the default skin. Drag chips to move forms between skins, onto <b>new skin</b> (or a character icon at the bottom) to make a skin, or onto <b>new character</b> to give a model its own icon. Double-click any name to rename it.</div>`
+    + roster.slots.map((slot, si) => {
+      const on = view.file && slot.skins.some(k => k.forms.some(f => f.file === view.file));
+      return `<div class="slot${on ? ' on' : ''}" data-si="${si}">
+        <div class="shead">${iconHTML(slot)}<input class="name" data-si="${si}" value="${esc(slot.name)}" aria-label="Character name"><button class="x" data-del-slot="${si}" title="Remove this character (its models go to Unassigned)">×</button></div>
+        ${slot.skins.map((skin, ki) => `<div class="skin${ki === slot.defaultSkin ? ' def' : ''}">
+          <div class="khead"><button class="star${ki === slot.defaultSkin ? ' on' : ''}" data-star="${si}:${ki}" title="${ki === slot.defaultSkin ? 'Default skin' : 'Make this the default skin'}" aria-pressed="${ki === slot.defaultSkin}">★</button>
+          <input class="name kname" data-si="${si}" data-ki="${ki}" value="${esc(skin.name)}" aria-label="Skin name"><button class="x" data-del-skin="${si}:${ki}" title="Remove this skin (its models go to Unassigned)">×</button></div>
+          <div class="forms" data-drop="form" data-si="${si}" data-ki="${ki}">${skin.forms.map(chipHTML).join('')}</div>
+        </div>`).join('')}
+        <div class="drop" data-drop="skin" data-si="${si}">+ drop here for a new skin</div>
+      </div>`;
+    }).join('')
+    + `<div class="drop" data-drop="slot" style="padding:14px">+ drop here for a new character (own select icon)</div>
+    <div class="tray"><h4>UNASSIGNED</h4><div class="forms" data-drop="none">${unassigned().map(f => chipHTML(F(f), -1)).join('') || '<span class="help" style="margin:4px">Drop a form here to take it off the roster.</span>'}</div></div>`;
+  el.scrollTop = scroll;
 }
 
-// ---------------- UI ----------------
-const rosterEl = $('roster');
-ROSTER.forEach((ch, c) => {
-  const el = document.createElement('div'); el.className = 'char';
-  el.innerHTML = `<h3>${ch.name}</h3><div class="forms"></div>`;
-  const fl = el.querySelector('.forms');
-  ch.forms.forEach((fm, f) => {
-    const b = document.createElement('button'); b.textContent = fm.name; b.title = fm.file;
-    b.onclick = () => show(c, f, false); fl.appendChild(b);
-  });
-  rosterEl.appendChild(el);
+$('editor').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (chip) { show(chip.dataset.file, true); return; }
+  const star = e.target.closest('[data-star]');
+  if (star) { const [si, ki] = star.dataset.star.split(':').map(Number); roster.slots[si].defaultSkin = ki; changed(); return; }
+  const ds = e.target.closest('[data-del-slot]');
+  if (ds) { roster.slots.splice(+ds.dataset.delSlot, 1); tidy(new Map(roster.slots.map(s => [s, defaultSkin(s)]))); refreshTitle(); return; }
+  const dk = e.target.closest('[data-del-skin]');
+  if (dk) {
+    const [si, ki] = dk.dataset.delSkin.split(':').map(Number), slot = roster.slots[si];
+    const defaults = new Map(roster.slots.map(s => [s, defaultSkin(s)]));
+    slot.skins.splice(ki, 1); tidy(defaults); refreshTitle();
+  }
 });
-function refreshRoster() {
-  [...rosterEl.children].forEach((el, c) => {
-    el.classList.toggle('on', c === view.c);
-    [...el.querySelectorAll('button')].forEach((b, f) => b.classList.toggle('on', c === view.c && f === view.f));
-  });
-  const on = rosterEl.querySelector('button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
-}
+$('editor').addEventListener('keydown', e => {
+  const chip = e.target.closest('.chip');
+  if (chip && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); show(chip.dataset.file, true); }
+  if (e.target.classList.contains('name') && e.key === 'Enter') e.target.blur();
+});
+$('editor').addEventListener('dblclick', e => {
+  const chip = e.target.closest('.chip'); if (!chip) return;
+  const at = findFile(chip.dataset.file); if (!at) return;
+  const n = prompt('Form name', at.form.name);
+  if (n && n.trim()) { at.form.name = n.trim().toUpperCase(); changed(); refreshTitle(); }
+});
+$('editor').addEventListener('change', e => {
+  const inp = e.target; if (!inp.classList.contains('name')) return;
+  const v = inp.value.trim().toUpperCase(); if (!v) { renderEditor(); return; }
+  const slot = roster.slots[+inp.dataset.si];
+  if (inp.dataset.ki !== undefined) slot.skins[+inp.dataset.ki].name = v; else slot.name = v;
+  changed(); refreshTitle();
+});
 
+$('editor').addEventListener('dragstart', e => {
+  const chip = e.target.closest && e.target.closest('.chip'); if (!chip) return;
+  dragFile = chip.dataset.file; chip.classList.add('dragging');
+  e.dataTransfer.setData(DRAG, dragFile); e.dataTransfer.setData('text/plain', dragFile); e.dataTransfer.effectAllowed = 'move';
+});
+$('editor').addEventListener('dragend', endDrag);
+$('editor').addEventListener('dragover', e => {
+  const zone = dragFile && e.target.closest('[data-drop]'); if (!zone) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.over').forEach(n => n !== zone && n.classList.remove('over')); zone.classList.add('over');
+});
+$('editor').addEventListener('dragleave', e => { const zone = e.target.closest('[data-drop]'); if (zone && !zone.contains(e.relatedTarget)) zone.classList.remove('over'); });
+$('editor').addEventListener('drop', e => {
+  const zone = dragFile && e.target.closest('[data-drop]'); if (!zone) return;
+  e.preventDefault();
+  const file = dragFile, kind = zone.dataset.drop;
+  if (kind === 'form') {
+    const skin = roster.slots[+zone.dataset.si].skins[+zone.dataset.ki];
+    // drop before the chip under the pointer, or after it when past its middle
+    let before = null; const chip = e.target.closest('.chip');
+    if (chip && chip.dataset.file !== file) {
+      const r = chip.getBoundingClientRect();
+      if (e.clientX < r.left + r.width / 2) before = chip.dataset.file;
+      else { const nx = chip.nextElementSibling; before = nx ? nx.dataset.file : null; }
+    } else if (chip) return;
+    moveFile(file, { type: 'form', skin, before: before === file ? null : before });
+  } else if (kind === 'skin') moveFile(file, { type: 'skin', slot: roster.slots[+zone.dataset.si] });
+  else if (kind === 'slot') moveFile(file, { type: 'slot' });
+  else moveFile(file, { type: 'none' });
+  refreshTitle();
+});
+
+// ---------------- character select preview ----------------
+function currentSlot() { const at = view.file && findFile(view.file); return at ? at.slot : null; }
+function renderPick() {
+  if (dragFile || dragSlot !== null) { redrawLater = true; return; }
+  const cur = currentSlot(), at = view.file && findFile(view.file);
+  $('tiles').innerHTML = roster.slots.map((slot, si) => `<button class="tile${slot === cur ? ' on' : ''}" draggable="true" data-si="${si}" title="${esc(slot.name)}: opens the default skin">${iconHTML(slot)}<span>${esc(slot.name)}</span></button>`).join('')
+    || '<span class="help">No characters on the roster.</span>';
+  $('skinRow').innerHTML = cur && cur.skins.length > 1 ? '<span class="lbl">SKIN</span>' + cur.skins.map((k, ki) =>
+    `<button class="tool${k === at.skin ? ' on' : ''}" data-skin="${ki}">${ki === cur.defaultSkin ? '★ ' : ''}${esc(k.name)}</button>`).join('') : '';
+  $('formRow').innerHTML = at && at.skin.forms.length > 1 ? '<span class="lbl">FORM</span>' + at.skin.forms.map((f, i) =>
+    `<button class="tool${f.file === view.file ? ' on' : ''}" data-file="${esc(f.file)}">${esc(f.name)}</button>`).join('') : '';
+  resize();
+}
+$('tiles').addEventListener('click', e => {
+  const t = e.target.closest('.tile'); if (!t) return;
+  const f = iconFile(roster.slots[+t.dataset.si]); if (f) show(f, true);
+});
+$('skinRow').addEventListener('click', e => {
+  const b = e.target.closest('[data-skin]'); const cur = currentSlot(); if (!b || !cur) return;
+  show(cur.skins[+b.dataset.skin].forms[0].file, true);
+});
+$('formRow').addEventListener('click', e => { const b = e.target.closest('[data-file]'); if (b) show(b.dataset.file, true); });
+$('tiles').addEventListener('dragstart', e => {
+  const t = e.target.closest('.tile'); if (!t) return;
+  dragSlot = +t.dataset.si; e.dataTransfer.setData(DRAG_SLOT, String(dragSlot)); e.dataTransfer.effectAllowed = 'move';
+});
+$('tiles').addEventListener('dragend', endDrag);
+// tiles take a dragged icon (reorder) or a dragged form chip (adds it to that character as a new skin)
+$('tiles').addEventListener('dragover', e => {
+  const t = e.target.closest('.tile'); if ((dragSlot === null && !dragFile) || !t) return;
+  e.preventDefault();
+  document.querySelectorAll('.tile.over').forEach(n => n !== t && n.classList.remove('over')); t.classList.add('over');
+});
+$('tiles').addEventListener('dragleave', e => { const t = e.target.closest('.tile'); if (t && !t.contains(e.relatedTarget)) t.classList.remove('over'); });
+$('tiles').addEventListener('drop', e => {
+  const t = e.target.closest('.tile'); if (!t) return;
+  if (dragFile) { e.preventDefault(); moveFile(dragFile, { type: 'skin', slot: roster.slots[+t.dataset.si] }); refreshTitle(); return; }
+  if (dragSlot === null) return;
+  e.preventDefault();
+  const to = +t.dataset.si; if (to === dragSlot) return;
+  const r = t.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2;
+  const [s] = roster.slots.splice(dragSlot, 1);
+  let at = to > dragSlot ? to - 1 : to; if (after) at++;
+  roster.slots.splice(at, 0, s); changed();
+});
+
+// ---------------- import / export ----------------
+function exportJSON() { return JSON.stringify(roster, null, 2); }
+$('bExport').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([exportJSON()], { type: 'application/json' }));
+  a.download = 'kiclash-roster.json'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('bCopy').onclick = async () => {
+  const b = $('bCopy');
+  try { await navigator.clipboard.writeText(exportJSON()); b.textContent = 'COPIED'; }
+  catch (e) {
+    const t = document.createElement('textarea'); t.value = exportJSON(); document.body.appendChild(t); t.select();
+    b.textContent = document.execCommand('copy') ? 'COPIED' : 'COPY FAILED'; t.remove();
+  }
+  setTimeout(() => { b.textContent = 'COPY JSON'; }, 1500);
+};
+$('bImport').onclick = () => $('importFile').click();
+$('importFile').onchange = async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  try {
+    const r = JSON.parse(await file.text());
+    if (!validRoster(r)) throw new Error('not a roster');
+    r.slots.forEach(s => { if (!(s.defaultSkin >= 0 && s.defaultSkin < s.skins.length)) s.defaultSkin = 0; });
+    roster = r; changed(); refreshTitle();
+  } catch (err) { alert(`That file isn't a KI CLASH roster (${err.message}).`); }
+};
+$('bReset').onclick = () => {
+  if (!confirm('Replace your roster with the built-in one? Export first if you want to keep it.')) return;
+  roster = clone(DEFAULT_ROSTER); changed(); refreshTitle();
+};
+
+// ---------------- viewer tools ----------------
 $('tSpin').onclick = () => { controls.autoRotate = !controls.autoRotate; setTool('tSpin', controls.autoRotate); };
 $('tLight').onclick = () => {
   view.studio = !view.studio; setTool('tLight', view.studio);
@@ -343,21 +674,18 @@ $('tWire').onclick = () => { view.wire = !view.wire; setTool('tWire', view.wire)
 $('tAcc').onclick = () => { view.showAcc = !view.showAcc; setTool('tAcc', view.showAcc); if (view.acc) view.acc.visible = view.showAcc; };
 $('tReset').onclick = () => frameCamera(view.fitted ? view.fitted.y : HEIGHT);
 
+// arrows: left/right steps through the current skin's forms, up/down through the character's skins
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
-  if (e.code === 'ArrowRight' || e.code === 'ArrowDown') { e.preventDefault(); show(...next(1), true); }
-  else if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') { e.preventDefault(); show(...next(-1), true); }
-  else if (e.code === 'KeyR') $('tReset').onclick();
-  else if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); $('tSpin').onclick(); }
+  if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  const at = view.file && findFile(view.file); if (!at) return;
+  if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') {
+    e.preventDefault(); const n = at.skin.forms.length;
+    show(at.skin.forms[(at.i + (e.code === 'ArrowRight' ? 1 : n - 1)) % n].file, true);
+  } else if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
+    e.preventDefault(); const ks = at.slot.skins, k = ks.indexOf(at.skin), n = ks.length;
+    show(ks[(k + (e.code === 'ArrowDown' ? 1 : n - 1)) % n].forms[0].file, true);
+  } else if (e.code === 'KeyR') $('tReset').onclick();
 });
-
-// open the form named in the URL hash, if any
-(() => {
-  const want = decodeURIComponent(location.hash.slice(1));
-  for (let c = 0; c < ROSTER.length; c++) for (let f = 0; f < ROSTER[c].forms.length; f++)
-    if (want && ROSTER[c].forms[f].file.replace(/\.glb$/, '') === want) { show(c, f); return; }
-  show(0, 0);
-})();
 
 function frame() {
   requestAnimationFrame(frame);
@@ -365,7 +693,11 @@ function frame() {
   sky.position.copy(camera.position);
   renderer.render(scene, camera);
 }
+
+renderEditor(); renderPick(); resize();
 requestAnimationFrame(frame);
+const first = roster.slots.map(iconFile).find(Boolean) || Object.keys(MODELS)[0];
+show(first).then(queueIcons);
 </script>
 </body>
 </html>
