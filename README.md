@@ -13,6 +13,12 @@ python3 -m http.server 8000
 
 GitHub Pages works too. Opened as a plain file, only the Wasteland stage is available.
 
+## Model viewer
+
+`viewer.html` (or the MODEL VIEWER button on the select screen) shows every character model in `models/`, grouped by character with a button per form or outfit. Drag to orbit, scroll to zoom, and use the arrow keys to step through every form. The address bar keeps the current model, so you can link straight to one.
+
+To add a model, put the `.glb` in `models/` and add it to `ROSTER` at the top of the script in `viewer.html`, either as a new form of an existing character or as a new character. Models are scaled to the same height automatically.
+
 ## Stages
 
 Pick a stage on the character select screen:

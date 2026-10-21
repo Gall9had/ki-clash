@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KI CLASH Model Viewer</title>
+<style>
+:root{--panel:rgba(14,10,26,.84);--line:rgba(255,255,255,.16);--txt:#f7f2e4;--dim:#b2a9c4;--gold:#ffc234;--red:#ff4757;--ki:#6fe0ff;
+--disp:Impact,"Haettenschweiler","Arial Narrow Bold","Franklin Gothic Bold",sans-serif;--body:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#07060d;color:var(--txt);font-family:var(--body)}
+#view{position:fixed;inset:0}
+#view canvas{display:block;width:100%;height:100%;outline:none}
+.hidden{display:none!important}
+kbd{display:inline-block;min-width:20px;padding:1px 5px;border:1px solid rgba(255,255,255,.4);border-bottom-width:3px;border-radius:5px;font:700 11px/1.2 var(--body);text-align:center;background:rgba(255,255,255,.08);color:#fff}
+
+#side{position:fixed;left:14px;top:14px;bottom:14px;width:270px;display:flex;flex-direction:column;gap:10px;z-index:2}
+.logo{font-family:var(--disp);font-size:40px;letter-spacing:3px;line-height:.9;font-style:italic;transform:skewX(-8deg);
+background:linear-gradient(180deg,#fff7d1 0%,#ffc234 45%,#ff6a1a 75%,#c2260e 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+filter:drop-shadow(0 3px 0 #3a0d00)}
+.logo small{display:block;font-size:17px;letter-spacing:5px}
+#back{font:700 12px var(--body);color:var(--dim);text-decoration:none}
+#back:hover{color:#fff}
+#roster{flex:1;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:4px 16px 4px 16px;padding:8px}
+.char{padding:8px 8px 10px;border-radius:8px}
+.char + .char{border-top:1px solid var(--line)}
+.char h3{font-family:var(--disp);font-weight:400;font-size:22px;letter-spacing:2px;font-style:italic;color:#fff;line-height:1.1}
+.char.on h3{color:var(--gold)}
+.forms{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.forms button,.tool{font:700 11px var(--body);letter-spacing:1px;padding:6px 9px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#ddd;cursor:pointer}
+.forms button:hover,.tool:hover{border-color:rgba(255,255,255,.45)}
+.forms button.on,.tool.on{background:#fff;color:#111;border-color:#fff}
+.forms button:focus-visible,.tool:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+#bar{position:fixed;right:14px;top:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;z-index:2;max-width:calc(100% - 320px)}
+#info{position:fixed;left:298px;right:14px;bottom:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;z-index:2;pointer-events:none}
+#title{font-family:var(--disp);font-size:clamp(34px,5vw,64px);letter-spacing:3px;font-style:italic;transform:skewX(-8deg);line-height:.95;text-shadow:0 4px 0 rgba(0,0,0,.6)}
+#title span{display:block;font-size:.42em;letter-spacing:4px;color:var(--gold)}
+#meta{font-size:12px;color:var(--dim);text-align:right;line-height:1.6;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+#meta b{color:#fff;font-weight:700}
+#status{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--disp);font-size:26px;letter-spacing:3px;color:#fff;text-shadow:0 2px 0 #000;z-index:2;text-align:center;pointer-events:none;padding:0 16px}
+#status.err{font-family:var(--body);font-size:15px;letter-spacing:0;color:var(--red);max-width:520px;line-height:1.5}
+
+@media (max-width:760px){
+  #side{left:16px;right:16px;top:12px;bottom:auto;width:auto}
+  .logo{font-size:28px}.logo small{display:inline;font-size:14px;margin-left:8px}
+  #roster{max-height:24vh;padding:4px 6px}
+  .char{padding:5px 4px 6px;display:flex;align-items:center;gap:10px}
+  .char h3{font-size:16px;min-width:92px}
+  .forms{margin-top:0}
+  .forms button{padding:5px 7px;font-size:10px}
+  #bar{top:auto;bottom:118px;right:16px;left:16px;max-width:none;justify-content:center}
+  #info{left:16px;right:16px;bottom:12px;flex-direction:column;align-items:stretch;gap:8px}
+  #meta{text-align:left}
+}
+</style>
+</head>
+<body>
+<div id="view"></div>
+
+<div id="side">
+  <div class="logo">KI CLASH<small>MODEL VIEWER</small></div>
+  <a id="back" href="index.html">&larr; Back to the game</a>
+  <div id="roster"></div>
+</div>
+
+<div id="bar">
+  <button class="tool on" id="tSpin" aria-pressed="true">TURNTABLE</button>
+  <button class="tool" id="tLight" aria-pressed="false">STUDIO LIGHT</button>
+  <button class="tool" id="tWire" aria-pressed="false">WIREFRAME</button>
+  <button class="tool" id="tAcc" aria-pressed="false">BANDANA</button>
+  <button class="tool" id="tReset">RESET VIEW</button>
+</div>
+
+<div id="info">
+  <div id="title"></div>
+  <div id="meta"></div>
+</div>
+<div id="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="lib/GLTFLoader.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   KI CLASH model viewer: browse every character model in models/
+   ===================================================================== */
+
+// rot: [x, y, z] radians, applied before the model is fitted, for models exported lying down or facing away
+const ROSTER = [
+  { name: 'GOKU', forms: [
+    { name: 'BASE', file: 'dbfz_goku_base_updated.glb' },
+    { name: 'SAIYAN SAGA', file: 'dbfz_goku_saiyan_saga.glb' },
+    { name: 'PARTIAL SSJ', file: 'dbfz_goku_partial_ssj.glb' },
+    { name: 'SUPER SAIYAN', file: 'dbfz_goku_ssj_updated.glb' },
+    { name: 'SSJ3 (MANGA)', file: 'dbfz_goku_ssj3_buu_saga_manga_style.glb' },
+    { name: 'CC OUTFIT', file: 'dbsz_cc_goku_base.glb' },
+  ] },
+  { name: 'VEGETA', forms: [
+    { name: 'WHIS ARMOR', file: 'dbsz_-_vegeta_whis_armor_base.glb' },
+    { name: 'SUPER SAIYAN', file: 'dbsz_-_vegeta_whis_armor_ss.glb' },
+    { name: 'SSG', file: 'dbsz_-_vegeta_whis_armor_ssg.glb' },
+    { name: 'SSGSS', file: 'dbsz_-_vegeta_whis_armor_ssgss.glb' },
+    { name: 'SSB (FZ)', file: 'vegeta_ssb_dbfz.glb' },
+  ] },
+  { name: 'GOKU BLACK', forms: [
+    { name: 'BASE', file: 'dbsz_gohan_black_base.glb' },
+    { name: 'ROSÉ', file: 'dbsz_gohan_black_rose.glb' },
+  ] },
+  { name: 'GOHAN', forms: [
+    { name: 'BEAST', file: 'gohan_beast.glb' },
+  ] },
+  { name: 'BARDOCK', forms: [
+    { name: 'BASE', file: 'bardock_base_dbfz.glb', acc: 'bardocks_bandana_dbfz.glb' },
+    { name: 'SUPER SAIYAN', file: 'bardock_ssj_dbfz.glb', acc: 'bardocks_bandana_dbfz.glb' },
+  ] },
+  { name: 'VEGITO', forms: [
+    { name: 'SSB', file: 'vegito_dbfz.glb' },
+  ] },
+  { name: 'GOGETA', forms: [
+    { name: 'SSJ (HALO)', file: 'the_angel_born_in_hell.glb' },
+  ] },
+  { name: 'GREAT APE', forms: [
+    { name: 'OOZARU', file: 'great_ape_dbsz.glb', height: 6 },
+  ] },
+];
+const HEIGHT = 1.8; // every model is fitted to this height, unless its form says otherwise
+
+const $ = id => document.getElementById(id);
+const V3 = THREE.Vector3;
+
+// ---------------- renderer / scene ----------------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.outputEncoding = THREE.sRGBEncoding;
+$('view').appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 500);
+// centre the model in the space the panels leave free, which on phones is below the roster and above the buttons
+function resize() {
+  renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight;
+  const top = innerWidth <= 760 ? $('side').getBoundingClientRect().bottom : 0;
+  const bottom = innerWidth <= 760 ? $('bar').getBoundingClientRect().top : innerHeight;
+  const left = innerWidth > 760 ? $('side').getBoundingClientRect().right : 0;
+  const dx = left / 2, dy = (top + bottom) / 2 - innerHeight / 2;
+  if (dx || dy) camera.setViewOffset(innerWidth, innerHeight, -dx, -dy, innerWidth, innerHeight); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false,
+  uniforms: { top: { value: new THREE.Color(0x1d1440) }, bot: { value: new THREE.Color(0x07060d) }, glow: { value: new THREE.Color(0x6a2a10) } },
+  vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: 'uniform vec3 top; uniform vec3 bot; uniform vec3 glow; varying vec3 vP; void main(){ float h = vP.y; vec3 c = mix(bot, top, clamp(h*1.4+0.35,0.0,1.0)); c += glow * pow(max(0.0, 1.0-abs(h)*3.0), 3.0) * 0.6; gl_FragColor = vec4(c,1.0); }'
+}));
+scene.add(sky);
+
+// floor: soft glowing disc plus a ring, like the arena edge in the game
+const floorTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gr.addColorStop(0, 'rgba(255,194,52,0.35)'); gr.addColorStop(0.55, 'rgba(255,120,40,0.12)'); gr.addColorStop(1, 'rgba(255,120,40,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c);
+})();
+const floor = new THREE.Mesh(new THREE.CircleGeometry(1.6, 64), new THREE.MeshBasicMaterial({ map: floorTex, transparent: true, depthWrite: false }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const ring = new THREE.Mesh(new THREE.RingGeometry(1.0, 1.03, 96), new THREE.MeshBasicMaterial({ color: 0xffe0a0, transparent: true, opacity: 0.4, depthWrite: false }));
+ring.rotation.x = -Math.PI / 2; ring.position.y = 0.002; scene.add(ring);
+
+// two light setups: "flat" keeps the cel-shaded look the models were made for, "studio" shows the shape
+const flatLights = new THREE.Group(), studioLights = new THREE.Group();
+flatLights.add(new THREE.AmbientLight(0xffffff, 0.85));
+const fKey = new THREE.DirectionalLight(0xffffff, 0.45); fKey.position.set(2, 4, 3); flatLights.add(fKey);
+studioLights.add(new THREE.HemisphereLight(0xfff3dd, 0x2a1a40, 0.55));
+const sKey = new THREE.DirectionalLight(0xffffff, 1.1); sKey.position.set(3, 4, 3); studioLights.add(sKey);
+const sRim = new THREE.DirectionalLight(0x6fe0ff, 0.9); sRim.position.set(-3, 2.5, -3); studioLights.add(sRim);
+const sFill = new THREE.DirectionalLight(0xffb070, 0.35); sFill.position.set(-3, 1, 2); studioLights.add(sFill);
+scene.add(flatLights);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 0.4; controls.maxDistance = 60;
+controls.autoRotate = true; controls.autoRotateSpeed = 1.6;
+controls.addEventListener('start', () => { controls.autoRotate = false; setTool('tSpin', false); });
+
+// ---------------- loading ----------------
+const loader = new THREE.GLTFLoader();
+const cache = {};
+// some exports are marked fully metallic, which renders near black without an environment to reflect
+function fixMaterials(root) {
+  root.traverse(n => {
+    if (n.isMesh) (Array.isArray(n.material) ? n.material : [n.material]).forEach(m => { if (m.metalness > 0 && !m.metalnessMap) m.metalness = 0; });
+  });
+}
+function loadModel(file) {
+  if (!cache[file]) {
+    cache[file] = new Promise((res, rej) => loader.load('models/' + file, g => { fixMaterials(g.scene); res(g); }, undefined, rej));
+    cache[file].catch(() => { delete cache[file]; });
+  }
+  return cache[file];
+}
+
+// Box3.setFromObject ignores skinning, and these models are skinned, so measure the posed vertices
+const _v = new V3();
+function skinnedBounds(root) {
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  root.traverse(n => {
+    if (!n.isMesh || !n.visible) return;
+    const pos = n.geometry.attributes.position; if (!pos) return;
+    const step = Math.max(1, Math.floor(pos.count / 20000));
+    for (let i = 0; i < pos.count; i += step) {
+      _v.fromBufferAttribute(pos, i);
+      if (n.isSkinnedMesh) n.boneTransform(i, _v);
+      box.expandByPoint(_v.applyMatrix4(n.matrixWorld));
+    }
+  });
+  return box;
+}
+
+// stand the model on the floor, centred, at the target height
+function fit(obj, form) {
+  obj.rotation.set(...(form.rot || [0, 0, 0]));
+  obj.scale.setScalar(1); obj.position.set(0, 0, 0);
+  const box = skinnedBounds(obj), size = box.getSize(new V3());
+  const s = (form.height || HEIGHT) / (size.y || 1);
+  obj.scale.setScalar(s);
+  const c = box.getCenter(new V3());
+  obj.position.set(-c.x * s, -box.min.y * s, -c.z * s);
+  obj.updateMatrixWorld(true);
+  return { size: size.multiplyScalar(s) };
+}
+
+function stats(root) {
+  let tris = 0, meshes = 0, bones = 0; const mats = new Set();
+  root.traverse(n => {
+    if (n.isBone) bones++;
+    if (!n.isMesh) return; meshes++;
+    const g = n.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+    (Array.isArray(n.material) ? n.material : [n.material]).forEach(m => mats.add(m));
+  });
+  return { tris: Math.round(tris), meshes, bones, mats: mats.size };
+}
+
+// ---------------- state ----------------
+const view = { c: 0, f: 0, model: null, acc: null, showAcc: false, studio: false, wire: false, token: 0, fitted: null };
+
+function setTool(id, on) { const b = $(id); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }
+
+function applyWire(root) {
+  root.traverse(n => { if (n.isMesh) (Array.isArray(n.material) ? n.material : [n.material]).forEach(m => { m.wireframe = view.wire; }); });
+}
+
+function frameCamera(height) {
+  const h = height || HEIGHT;
+  controls.target.set(0, h * 0.52, 0);
+  const d = h * 1.95 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / 2;
+  camera.position.set(d * 0.35, h * 0.62, d);
+  camera.near = h / 200; camera.far = h * 200; camera.updateProjectionMatrix();
+  floor.scale.setScalar(h / HEIGHT); ring.scale.setScalar(h / HEIGHT);
+  controls.minDistance = h * 0.25; controls.maxDistance = h * 30;
+  controls.update();
+}
+
+async function show(c, f, keepCamera) {
+  view.c = c; view.f = f;
+  const form = ROSTER[c].forms[f], token = ++view.token;
+  refreshRoster();
+  $('title').innerHTML = `${ROSTER[c].name}<span>${form.name}</span>`;
+  $('status').className = ''; $('status').textContent = 'LOADING…';
+  $('tAcc').classList.toggle('hidden', !form.acc);
+  try { history.replaceState(null, '', '#' + encodeURIComponent(form.file.replace(/\.glb$/, ''))); } catch (e) { /* ignore */ }
+  let gltf, accGltf = null;
+  try {
+    gltf = await loadModel(form.file);
+    if (form.acc) accGltf = await loadModel(form.acc).catch(() => null);
+  } catch (err) {
+    if (token !== view.token) return;
+    console.error(err);
+    $('status').className = 'err';
+    $('status').textContent = location.protocol === 'file:'
+      ? 'Browsers block loading models from a file opened straight from disk. Serve the folder over http (see the README) and reload.'
+      : `Couldn't load ${form.file}.`;
+    return;
+  }
+  if (token !== view.token) return;
+  if (view.model) scene.remove(view.model);
+  if (view.acc) scene.remove(view.acc);
+  view.model = gltf.scene; scene.add(view.model);
+  const { size } = fit(view.model, form);
+  view.fitted = size;
+  // the bandana shares Bardock's rig, so give it the same transform as the body it sits on
+  view.acc = null;
+  if (accGltf) {
+    view.acc = accGltf.scene;
+    view.acc.rotation.copy(view.model.rotation); view.acc.scale.copy(view.model.scale); view.acc.position.copy(view.model.position);
+    view.acc.visible = view.showAcc; scene.add(view.acc); applyWire(view.acc);
+  }
+  applyWire(view.model);
+  if (!keepCamera) frameCamera(size.y);
+  const st = stats(view.model);
+  $('meta').innerHTML = `<b>${form.file}</b><br>${st.tris.toLocaleString()} triangles · ${st.meshes} meshes · ${st.mats} materials · ${st.bones} bones`;
+  $('status').textContent = '';
+  // warm the cache for the next form so stepping through feels instant
+  const nx = next(1); loadModel(ROSTER[nx[0]].forms[nx[1]].file).catch(() => {});
+}
+
+function next(dir) {
+  let c = view.c, f = view.f + dir;
+  if (f >= ROSTER[c].forms.length) { c = (c + 1) % ROSTER.length; f = 0; }
+  if (f < 0) { c = (c - 1 + ROSTER.length) % ROSTER.length; f = ROSTER[c].forms.length - 1; }
+  return [c, f];
+}
+
+// ---------------- UI ----------------
+const rosterEl = $('roster');
+ROSTER.forEach((ch, c) => {
+  const el = document.createElement('div'); el.className = 'char';
+  el.innerHTML = `<h3>${ch.name}</h3><div class="forms"></div>`;
+  const fl = el.querySelector('.forms');
+  ch.forms.forEach((fm, f) => {
+    const b = document.createElement('button'); b.textContent = fm.name; b.title = fm.file;
+    b.onclick = () => show(c, f, false); fl.appendChild(b);
+  });
+  rosterEl.appendChild(el);
+});
+function refreshRoster() {
+  [...rosterEl.children].forEach((el, c) => {
+    el.classList.toggle('on', c === view.c);
+    [...el.querySelectorAll('button')].forEach((b, f) => b.classList.toggle('on', c === view.c && f === view.f));
+  });
+  const on = rosterEl.querySelector('button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
+}
+
+$('tSpin').onclick = () => { controls.autoRotate = !controls.autoRotate; setTool('tSpin', controls.autoRotate); };
+$('tLight').onclick = () => {
+  view.studio = !view.studio; setTool('tLight', view.studio);
+  scene.remove(view.studio ? flatLights : studioLights); scene.add(view.studio ? studioLights : flatLights);
+};
+$('tWire').onclick = () => { view.wire = !view.wire; setTool('tWire', view.wire); if (view.model) applyWire(view.model); if (view.acc) applyWire(view.acc); };
+$('tAcc').onclick = () => { view.showAcc = !view.showAcc; setTool('tAcc', view.showAcc); if (view.acc) view.acc.visible = view.showAcc; };
+$('tReset').onclick = () => frameCamera(view.fitted ? view.fitted.y : HEIGHT);
+
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'ArrowRight' || e.code === 'ArrowDown') { e.preventDefault(); show(...next(1), true); }
+  else if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') { e.preventDefault(); show(...next(-1), true); }
+  else if (e.code === 'KeyR') $('tReset').onclick();
+  else if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); $('tSpin').onclick(); }
+});
+
+// open the form named in the URL hash, if any
+(() => {
+  const want = decodeURIComponent(location.hash.slice(1));
+  for (let c = 0; c < ROSTER.length; c++) for (let f = 0; f < ROSTER[c].forms.length; f++)
+    if (want && ROSTER[c].forms[f].file.replace(/\.glb$/, '') === want) { show(c, f); return; }
+  show(0, 0);
+})();
+
+function frame() {
+  requestAnimationFrame(frame);
+  controls.update();
+  sky.position.copy(camera.position);
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
