@@ -47,6 +47,8 @@ background:linear-gradient(180deg,#ffe27a,#ff9a1f);box-shadow:0 5px 0 #8a3a00,0 
 #startBtn:disabled{filter:grayscale(1) brightness(.55);cursor:default;box-shadow:none}
 .controls{display:grid;grid-template-columns:repeat(4,auto);gap:7px 20px;font-size:12px;color:#ddd;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
 .controls div{display:flex;gap:6px;align-items:center}
+#stageSeg .note{font-weight:400;font-size:12px;min-width:120px}
+#stageSeg .note.err{color:var(--red)}
 .warn{font-size:12px;color:var(--dim);max-width:640px;text-align:center;line-height:1.5}
 .warn b{color:var(--gold)}
 
@@ -181,6 +183,9 @@ text-shadow:0 6px 0 #000,0 0 40px rgba(255,160,40,.8);transform:translateY(-50%)
   <div class="step" id="stepTxt"></div>
   <div id="cards"></div>
   <div class="row">
+    <div class="seg" id="stageSeg">STAGE <span class="note" id="stageNote"></span></div>
+  </div>
+  <div class="row">
     <div class="seg" id="modeSeg">MODE <button data-m="versus" class="on">VERSUS</button><button data-m="training">TRAINING</button></div>
     <div class="seg">CPU <button data-d="0">EASY</button><button data-d="1" class="on">NORMAL</button><button data-d="2">HARD</button></div>
     <button class="ghost" id="fsBtn">FULLSCREEN</button>
@@ -197,6 +202,8 @@ text-shadow:0 6px 0 #000,0 0 40px rgba(255,160,40,.8);transform:translateY(-50%)
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="lib/GLTFLoader.js"></script>
+<script src="lib/meshopt_decoder.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -280,7 +287,7 @@ renderer.setSize(innerWidth, innerHeight);
 $('game').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xebc494, 120, 420);
-const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 1500);
+const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 4000);
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
 
 const GEO_SPH = new THREE.SphereGeometry(1, 18, 12);
@@ -324,21 +331,86 @@ function buildWorld() {
   sky.renderOrder = -1; scene.add(sky); world.sky = sky;
   scene.add(new THREE.HemisphereLight(0xfff3dd, 0x8a6440, 0.95));
   const sun = new THREE.DirectionalLight(0xffffff, 0.75); sun.position.set(80, 140, 50); scene.add(sun);
+  const base = new THREE.Group(); scene.add(base); world.base = base;
   const tex = makeGroundTex();
   const ground = new THREE.Mesh(new THREE.CircleGeometry(700, 64), new THREE.MeshLambertMaterial({ color: tex ? 0xffffff : 0xc39468, map: tex }));
-  ground.rotation.x = -Math.PI / 2; scene.add(ground);
+  ground.rotation.x = -Math.PI / 2; base.add(ground);
   const edge = new THREE.Mesh(new THREE.RingGeometry(ARENA_R - 0.6, ARENA_R, 128), new THREE.MeshBasicMaterial({ color: 0xffe0a0, transparent: true, opacity: 0.35, depthWrite: false }));
-  edge.rotation.x = -Math.PI / 2; edge.position.y = 0.05; scene.add(edge);
+  edge.rotation.x = -Math.PI / 2; edge.position.y = 0.05; scene.add(edge); world.edge = edge;
   const rockA = new THREE.MeshLambertMaterial({ color: 0xa8744a, flatShading: true });
   const rockB = new THREE.MeshLambertMaterial({ color: 0x8e5f3c, flatShading: true });
   for (let i = 0; i < 46; i++) {
     const big = i < 30, a = Math.random() * Math.PI * 2, r = big ? rand(160, 420) : rand(28, 125);
     const h = big ? rand(18, 70) : rand(2, 9), rt = big ? rand(8, 22) : rand(1.5, 4);
     const m = new THREE.Mesh(new THREE.CylinderGeometry(rt * rand(0.6, 0.9), rt, h, 7), Math.random() < 0.5 ? rockA : rockB);
-    m.position.set(Math.cos(a) * r, h / 2 - 0.5, Math.sin(a) * r); m.rotation.y = Math.random() * 3; scene.add(m);
+    m.position.set(Math.cos(a) * r, h / 2 - 0.5, Math.sin(a) * r); m.rotation.y = Math.random() * 3; base.add(m);
   }
 }
 buildWorld();
+
+// ---------------- stages ----------------
+// GLB stages are scaled and shifted so their fighting floor sits at y = 0, the height the fighters treat as ground.
+const STAGES = [
+  { id: 'wasteland', name: 'WASTELAND' },
+  { id: 'westcity', name: 'WEST CITY', url: 'stages/west_city.glb', scale: 1, y: 40, fog: [0xbfe3ff, 400, 2400] }, // street level, under the highway
+  { id: 'island', name: 'ISLAND', url: 'stages/island.glb', scale: 2, y: -1.4, z: -50, fog: [0xa9dcff, 400, 2400] }, // centred on the grass plateau
+];
+const stageCache = {};
+let stageIdx = 0, stageLoading = null;
+function loadStage(st) {
+  if (stageCache[st.id]) return stageCache[st.id];
+  stageCache[st.id] = new Promise((res, rej) => {
+    if (!THREE.GLTFLoader) { rej(new Error('GLTFLoader missing')); return; }
+    const loader = new THREE.GLTFLoader();
+    if (window.MeshoptDecoder) loader.setMeshoptDecoder(MeshoptDecoder);
+    loader.load(st.url, gltf => {
+      const root = gltf.scene;
+      root.scale.setScalar(st.scale); root.position.set(st.x || 0, st.y, st.z || 0);
+      // the stages are hand-painted, so draw them unlit with their own colours
+      const unlit = new Map();
+      root.traverse(n => {
+        if (!n.isMesh) return;
+        const old = n.material;
+        if (!unlit.has(old)) {
+          unlit.set(old, new THREE.MeshBasicMaterial({
+            map: old.map, color: old.color, vertexColors: old.vertexColors, side: old.side,
+            transparent: old.transparent, opacity: old.opacity, alphaTest: old.transparent ? 0.02 : old.alphaTest, depthWrite: old.depthWrite,
+          }));
+          old.dispose();
+        }
+        n.material = unlit.get(old);
+      });
+      res(root);
+    }, undefined, rej);
+  });
+  stageCache[st.id].catch(() => { delete stageCache[st.id]; });
+  return stageCache[st.id];
+}
+function applyStage(i, root) {
+  const st = STAGES[i];
+  if (world.stage) world.stage.visible = false;
+  world.stage = root || null;
+  if (root) { if (!root.parent) scene.add(root); root.visible = true; }
+  world.base.visible = !root;
+  if (st.fog) { scene.fog.color.setHex(st.fog[0]); scene.fog.near = st.fog[1]; scene.fog.far = st.fog[2]; }
+  else { scene.fog.color.setHex(0xebc494); scene.fog.near = 120; scene.fog.far = 420; }
+}
+function selectStage(i) {
+  stageIdx = i;
+  const st = STAGES[i];
+  if (!st.url) { stageLoading = null; applyStage(i, null); refreshStageUI(); return; }
+  const p = stageLoading = loadStage(st);
+  refreshStageUI();
+  p.then(root => {
+    if (stageLoading !== p) return;
+    stageLoading = null; applyStage(i, root); refreshStageUI();
+  }, err => {
+    if (stageLoading !== p) return;
+    console.error(err); stageLoading = null; stageIdx = 0; applyStage(0, null); refreshStageUI();
+    const n = $('stageNote'); n.className = 'note err';
+    n.textContent = location.protocol === 'file:' ? `${st.name} needs the game served over http (see README)` : `Couldn't load ${st.name}`;
+  });
+}
 
 // ---------------- audio (tiny synth) ----------------
 let AC = null, master = null, noiseBuf = null, muted = false;
@@ -3009,7 +3081,7 @@ function refreshSelect() {
   $('stepTxt').innerHTML = pk.p === null ? 'Choose <b>your fighter</b>'
     : pk.e === null ? `Now pick ${game.mode === 'training' ? 'a <i>training dummy</i>' : 'an <i>opponent</i>'} <span>(or hit ${game.mode === 'training' ? 'TRAIN' : 'FIGHT'} for a random one)</span>`
     : `<b>${CHARS[pk.p].name}</b> vs <i>${CHARS[pk.e].name}</i> <span>(click a card to start over)</span>`;
-  $('startBtn').disabled = pk.p === null;
+  $('startBtn').disabled = pk.p === null || !!stageLoading;
   $('startBtn').textContent = game.mode === 'training' ? 'TRAIN!' : 'FIGHT!';
 }
 document.querySelectorAll('.seg button[data-d]').forEach(b => b.onclick = () => {
@@ -3028,6 +3100,17 @@ $('fsBtn').onclick = async () => {
     if (navigator.keyboard && navigator.keyboard.lock) await navigator.keyboard.lock();
   } catch (e) { $('fsBtn').textContent = 'FULLSCREEN BLOCKED HERE'; }
 };
+const stageSeg = $('stageSeg');
+STAGES.forEach((st, i) => {
+  const b = document.createElement('button'); b.textContent = st.name; b.onclick = () => selectStage(i);
+  stageSeg.insertBefore(b, $('stageNote'));
+});
+function refreshStageUI() {
+  [...stageSeg.querySelectorAll('button')].forEach((b, i) => b.classList.toggle('on', i === stageIdx));
+  const n = $('stageNote'); n.className = 'note'; n.textContent = stageLoading ? 'Loading…' : '';
+  $('startBtn').disabled = game.pick.p === null || !!stageLoading;
+}
+selectStage(0);
 refreshSelect();
 
 // ---------------- main loop ----------------
